@@ -2,6 +2,9 @@
  * 数据历史堆栈
  */
 class Histories {
+    grid: any;
+    history: never[];
+    historyIndex: number;
     constructor(grid) {
         this.grid = grid;
         this.history = [];

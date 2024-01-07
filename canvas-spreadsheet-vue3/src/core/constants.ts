@@ -22,7 +22,7 @@ export const READONLY_COLOR = "#f8f8f9"; // 单元格只读背景色
 export const READONLY_TEXT_COLOR = "#80848f"; // 单元格只读文本颜色
 export const ERROR_TIP_COLOR = "#ED3F14"; // 单元格错误提示文本颜色
 
-export const SIZE_MAP = { // 尺寸枚举映射
+export const SIZE_MAP: {[key: string]: any} = { // 尺寸枚举映射
   mini: 100,
   small: 140,
   medium: 200,

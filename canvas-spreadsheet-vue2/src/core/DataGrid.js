@@ -446,6 +446,7 @@ class DataGrid {
   // 开始编辑
   startEdit() {
     if (this.focusCell && !this.focusCell.readonly) {
+      debugger;
       this.editor.show = true;
       // this.selector.show = false;
       this.resetCellPosition()

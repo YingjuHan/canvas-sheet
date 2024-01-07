@@ -2,16 +2,32 @@ import Context from "./Context.js";
 import {
   CHECK_BOX_WIDTH,
   SELECT_BORDER_COLOR,
-  SELECT_BG_COLOR
+  SELECT_BG_COLOR,
 } from "./constants";
 import { getAssetUrl } from "./util";
+import DataGrid from './DataGrid';
 const oncheck = new Image();
 const offcheck = new Image();
 oncheck.src = getAssetUrl("./images/oncheck.png");
 offcheck.src = getAssetUrl("./images/offcheck.png");
 
 class RowHeader extends Context {
-  constructor(grid, rowIndex, x, y, width, height, options) {
+  rowIndex: any;
+  text: any;
+  checked: boolean;
+  borderColor: any;
+  fillColor: any;
+  borderWidth: any;
+  color: any;
+  constructor(
+    grid: any,
+    rowIndex: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    options: any
+  ) {
     super(grid, x, y, width, height);
 
     this.rowIndex = rowIndex;
@@ -34,7 +50,7 @@ class RowHeader extends Context {
       this.grid.painter.drawRect(this.width, y, CHECK_BOX_WIDTH, this.height, {
         borderColor: this.borderColor,
         fillColor: this.fillColor,
-        borderWidth: this.borderWidth
+        borderWidth: this.borderWidth,
       });
       this.grid.painter.drawImage(
         checkEl,
@@ -49,7 +65,7 @@ class RowHeader extends Context {
     this.grid.painter.drawRect(this.x, y, this.width, this.height, {
       fillColor: this.fillColor,
       // borderColor: this.borderColor,
-      borderWidth: this.borderWidth
+      borderWidth: this.borderWidth,
     });
     // 绘制每行的索引
     this.grid.painter.drawCellText(
@@ -61,7 +77,7 @@ class RowHeader extends Context {
       10,
       {
         color: this.color,
-        align: 'center'
+        align: "center",
       }
     );
 
@@ -80,7 +96,7 @@ class RowHeader extends Context {
           this.width + this.grid.checkboxWidth,
           this.height,
           {
-            fillColor: SELECT_BG_COLOR
+            fillColor: SELECT_BG_COLOR,
           }
         );
       }
@@ -89,11 +105,11 @@ class RowHeader extends Context {
       if (this.rowIndex >= minY && this.rowIndex <= maxY) {
         const points = [
           [this.width + this.grid.checkboxWidth, y],
-          [this.width + this.grid.checkboxWidth, y + this.height]
+          [this.width + this.grid.checkboxWidth, y + this.height],
         ];
         this.grid.painter.drawLine(points, {
           borderColor: SELECT_BORDER_COLOR,
-          borderWidth: 2
+          borderWidth: 2,
         });
       }
     }

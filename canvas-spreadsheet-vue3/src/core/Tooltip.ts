@@ -8,11 +8,11 @@ class Tooltip {
   width: number;
   height: number;
   valid: boolean;
-  message: string;
+  message: string | undefined;
   colWidth: number;
   colHeight: number
   fixed: string;
-  constructor(grid: DataGrid, x: number, y: number, message: string, type: any) {
+  constructor(grid: any, x: number, y: number, message?: string, type?: any) {
     this.grid = grid;
     this.x = x;
     this.y = y;

@@ -486,7 +486,7 @@ export default {
     this.$nextTick(() => {
       const self = this;
       let el = document.getElementById(`${CSS_PREFIX}-target`);
-
+      console.log(el);
       this.grid = new DataGrid(el, {
         rowKey: this.rowKey,
         width: this.width,

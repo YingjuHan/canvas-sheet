@@ -19,6 +19,7 @@ function calucateTextAlign(value, width, padding, align) {
 }
 
 class Paint {
+  ctx: any;
   constructor(target) {
     this.ctx = target.getContext("2d");
   }
@@ -146,7 +147,7 @@ class Paint {
     this.ctx.restore()
   }
   // 在指定宽度的单元格尾部渲染一个图标
-  drawCellAffixIcon(icon, x, y, width, height, options) {
+  drawCellAffixIcon(icon: string, x: any, y: number, width: any, height: number, options: { fillColor: any; color: any; }) {
     options = Object.assign(
       {
         color: '#bbbec4',
@@ -351,8 +352,8 @@ class Paint {
    * @param {Number} width 单元格宽度
    * @param {Number} padding 左右需要留出的padding
    */
-  getTextWrapping(text, width, padding) {
-    if (!text && text !== 0) {
+  getTextWrapping(text: string, width: number, padding: number) {
+    if (!text) {
       return '';
     }
     this.ctx.font =

@@ -183,6 +183,7 @@ class Element {
       this.el.innerHTML = content;
       return this;
     }
+    
     return this.el.innerHTML;
   }
 

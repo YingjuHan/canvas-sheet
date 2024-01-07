@@ -7,6 +7,21 @@ import {
 } from "./constants";
 
 class Scroller {
+  grid: any;
+  horizontalScroller: {
+    x: number; // 滚动条位移
+    move: boolean; // 是否开始滚动中
+    focus: boolean; // 是否获得焦点
+    size: number; // 滚动滑块的尺寸
+    ratio: number; // 画布实际滚动的位移和滚动条实际滚动的位移之比
+    has: boolean; // 是否有滚动条
+  };
+  verticalScroller: {
+    y: number; move: boolean; focus: boolean; // 是否获得焦点
+    size: number; ratio: number; has: boolean;
+  };
+  mouseOriginalX: any;
+  mouseOriginalY: any;
   constructor(grid) {
     this.grid = grid;
     this.horizontalScroller = {

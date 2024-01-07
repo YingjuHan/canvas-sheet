@@ -1,21 +1,30 @@
-import { CELL_HEIGHT } from "./constants";
+import { CELL_HEIGHT, MIN_CELL_HEIGHT } from "./constants";
 import Row from "./Row.js";
+import DataGrid from "./DataGrid";
+import { toRaw } from 'vue';
 
 class Body {
-  constructor(grid, data) {
-    this.grid = grid;
-
-    this.paint(data);
+  grid: DataGrid;
+  data: any;
+  rows: Row[];
+  height: any;
+  constructor(grid: DataGrid) {
+    this.grid = toRaw(grid);
+    this.rows = [];
+    this.paint(toRaw(grid.data));
   }
-  paint(data) {
+  paint(data: any) {
     this.data = data;
     this.rows = [];
     const len = data.length;
     let everyOffsetY = this.grid.tableHeaderHeight;
     for (let i = 0; i < len; i++) {
       const rowData = data[i];
+      console.log(Object.prototype.toString.call(this.grid));
+      
       const row = new Row(this.grid, i, 0, everyOffsetY, CELL_HEIGHT, rowData);
-      this.rows.push(row);
+      this.rows.push(toRaw(row));
+      console.log(toRaw(row));
       everyOffsetY += CELL_HEIGHT;
     }
 
@@ -28,7 +37,7 @@ class Body {
    * CTRL+V 粘贴
    * @param {Array} data 粘贴板中的数据
    */
-  pasteData(data) {
+  pasteData(data: Array<any>) {
     const { xIndex, yIndex } = this.grid.editor;
     const xArr = [xIndex, xIndex + data[0].length - 1]
     const yArr = [yIndex, yIndex + data.length - 1]
@@ -163,7 +172,7 @@ class Body {
     const indeterminate = totalChecked && totalChecked < this.grid.data.length
     this.grid.header.handleCheck({ checked, indeterminate })
   }
-  mouseMove(x, y) {
+  mouseMove(x: number, y: number) {
     for (let i = 0; i < this.rows.length; i++) {
       if (this.rows[i].isInVerticalAutofill(x, y)) {
         this.rows[i].handleAutofill(x, y);
@@ -172,7 +181,7 @@ class Body {
       }
     }
   }
-  mouseDown(x, y) {
+  mouseDown(x: number, y: number) {
     for (let i = 0; i < this.rows.length; i++) {
       if (this.rows[i].isInVerticalAutofill(x, y)) {
         this.rows[i].handleStartAutofill(x, y);
@@ -181,14 +190,14 @@ class Body {
       }
     }
   }
-  click(x, y) {
+  click(x: number, y: number) {
     for (let i = 0; i < this.rows.length; i++) {
       if (this.rows[i].isInsideVerticaBodyBoundary(x, y)) {
         this.rows[i].click(x, y);
       }
     }
   }
-  dbClick(x, y) {
+  dbClick(x: number, y: number) {
     for (let i = 0; i < this.rows.length; i++) {
       if (this.rows[i].isInsideVerticaBodyBoundary(x, y)) {
         this.rows[i].dbClick(x, y);
@@ -239,7 +248,7 @@ class Body {
     }
   }
   // 根据坐标获取cell对象
-  getCell(x, y) {
+  getCell(x: number, y: number) {
     const row = this.rows[y];
     return row.allCells[x];
   }
@@ -443,7 +452,7 @@ class Body {
     });
     return Object.assign({}, row.data, _o)
   }
-  getCellData(x, y) {
+  getCellData(x: number, y: number) {
     const cell = this.getCell(x, y)
     return {
       title: cell.title,

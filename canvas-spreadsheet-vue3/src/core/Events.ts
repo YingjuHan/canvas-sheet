@@ -1,3 +1,4 @@
+import DataGrid from './DataGrid';
 function bind(target, name, fn, useCapture) {
   target.addEventListener(name, fn, useCapture);
 }
@@ -6,7 +7,7 @@ function unbind(target, name, fn, useCapture) {
 }
 function unbindClickoutside(el) {
   if (el.xclickoutside) {
-    unbind(window.document.body, 'mousedown', el.xclickoutside);
+    unbind(window.document.body, "mousedown", el.xclickoutside);
     delete el.xclickoutside;
   }
 }
@@ -15,21 +16,22 @@ function unbindClickoutside(el) {
 // the right mouse button: mousedown → contenxtmenu → mouseup
 // the right mouse button in firefox(>65.0): mousedown → contenxtmenu → mouseup → click on window
 function bindClickoutside(el, cb) {
-  const self = this
+  const self = this;
   el.xclickoutside = (evt) => {
     // ignore double click
     // console.log('evt:', evt);
-    const pointX = evt.clientX - self.containerOriginX
-    const pointY = evt.clientY - self.containerOriginY
-    const isInTable = pointX > 0 && pointX < self.width && pointY > 0 && pointY < self.height
+    const pointX = evt.clientX - self.containerOriginX;
+    const pointY = evt.clientY - self.containerOriginY;
+    const isInTable =
+      pointX > 0 && pointX < self.width && pointY > 0 && pointY < self.height;
     if (evt.detail === 2 || el.contains(evt.target) || isInTable) return;
     if (cb) cb(el);
     else {
-      el.style.display = 'none'
+      el.style.display = "none";
       unbindClickoutside(el);
     }
   };
-  bind(window.document.body, 'mousedown', el.xclickoutside);
+  bind(window.document.body, "mousedown", el.xclickoutside);
 }
 function throttle(
   func,
@@ -38,12 +40,12 @@ function throttle(
     // leading 和 trailing 无法同时为 false
     leading: true,
     trailing: false,
-    context: null
+    context: null,
   }
 ) {
   let previous = new Date(0).getTime();
   let timer;
-  const _throttle = function(...args) {
+  const _throttle = function (...args) {
     let now = new Date().getTime();
 
     if (!options.leading) {
@@ -72,7 +74,7 @@ function throttle(
 }
 function handleMouseDown(e) {
   e.preventDefault();
-  this.enterShift = e.shiftKey
+  this.enterShift = e.shiftKey;
   // 点击画布的任何区域都需要将编辑器变为非编辑模式
   this.doneEdit();
   const rect = e.target.getBoundingClientRect();
@@ -151,30 +153,30 @@ function handleKeydown(e) {
     (e.ctrlKey && e.keyCode === 90) ||
     (e.metaKey && !e.shiftKey && e.keyCode === 90)
   ) {
-    e.preventDefault()
-    this.history.backState()
+    e.preventDefault();
+    this.history.backState();
   }
   // 恢复
   if (
     (e.ctrlKey && e.keyCode === 89) ||
     (e.metaKey && e.shiftKey && e.keyCode === 90)
   ) {
-    e.preventDefault()
-    this.history.forwardState()
+    e.preventDefault();
+    this.history.forwardState();
   }
   // CTRL+C／Command+C
   if ((e.ctrlKey && e.keyCode === 67) || (e.metaKey && e.keyCode === 67)) {
-    e.preventDefault()
+    e.preventDefault();
     this.clipboard.copy();
   }
   // CTRL+V／Command+V
   if ((e.ctrlKey && e.keyCode === 86) || (e.metaKey && e.keyCode === 86)) {
-      // e.preventDefault() // 注意：这里一定不能阻止默认事件，因为粘贴功能依赖原生的paste事件
-      this.clipboard.paste();
+    // e.preventDefault() // 注意：这里一定不能阻止默认事件，因为粘贴功能依赖原生的paste事件
+    this.clipboard.paste();
   }
   // CTRL+A／Command+A
   if ((e.ctrlKey && e.keyCode) === 65 || (e.metaKey && e.keyCode === 65)) {
-    e.preventDefault()
+    e.preventDefault();
     // TODO Select all
   }
   // CTRL+R／CRTRL+F等类型的事件不阻止默认事件
@@ -224,7 +226,7 @@ function handleKeydown(e) {
       break;
     case 8: // BackSpace／delede
     case 46:
-      this.clearSelectedData()
+      this.clearSelectedData();
       break;
     case 13:
       this.startEdit();
@@ -280,33 +282,35 @@ function handleResize() {
 }
 
 class Events {
-  constructor(grid, el) {
+  grid: any;
+  el: any;
+  isFirefox: boolean;
+  eventTasks: any;
+  constructor(grid: any, el: any) {
     this.grid = grid;
-    this.el = el
-    this.isFirefox = typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+    this.el = el;
+    this.isFirefox =
+      typeof navigator !== "undefined" &&
+      navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
 
-    this.init()
+    this.init();
   }
   init() {
-    const {
-      el,
-      grid,
-      isFirefox
-    } = this
+    const { el, grid, isFirefox } = this;
     // const rootEl = el.parentElement;
     this.eventTasks = {
-      'clickoutside': handleClickoutside.bind(grid),
-      'mousedown': handleMouseDown.bind(grid),
-      'mousemove': handleMouseMove.bind(grid),
-      'mouseup': handleMouseUp.bind(grid),
-      'click': handleClick.bind(grid),
-      'dblclick': handleDbClick.bind(grid),
-      'mousewheel': handleScroll.bind(grid),
-      'keydown': handleKeydown.bind(grid),
-      'resize': throttle(handleResize, 100, {
-        context: grid
+      clickoutside: handleClickoutside.bind(grid),
+      mousedown: handleMouseDown.bind(grid),
+      mousemove: handleMouseMove.bind(grid),
+      mouseup: handleMouseUp.bind(grid),
+      click: handleClick.bind(grid),
+      dblclick: handleDbClick.bind(grid),
+      mousewheel: handleScroll.bind(grid),
+      keydown: handleKeydown.bind(grid),
+      resize: throttle(handleResize, 100, {
+        context: grid,
       }),
-    }
+    };
     /**
      * 这里用js的方案实现Clickoutside会导致一个问题，对于select／data-picker等浮层组件，
      * 若其超过视窗之外，则会判断不准确，所以直接用v-clickoutside指令的方式完美替代；
@@ -316,30 +320,37 @@ class Events {
      * 需要鼠标在画布之外时也保持事件执行的能力
      */
     // bindClickoutside.call(grid, rootEl, handleClickoutside.bind(grid))
-    bind(el, 'mousedown', this.eventTasks.mousedown, false)
-    bind(window, 'mousemove', this.eventTasks.mousemove, false)
-    bind(window, 'mouseup', this.eventTasks.mouseup, false)
-    bind(el, 'click', this.eventTasks.click, false)
-    bind(el, 'dblclick', this.eventTasks.dblclick, false)
-    bind(el, isFirefox ? 'DOMMouseScroll' : 'mousewheel', this.eventTasks.mousewheel, false)
-    bind(window, 'keydown', this.eventTasks.keydown, false) // canvas元素不支持keydown事件
-    bind(window, 'resize', this.eventTasks.resize, false)
+    bind(el, "mousedown", this.eventTasks.mousedown, false);
+    bind(window, "mousemove", this.eventTasks.mousemove, false);
+    bind(window, "mouseup", this.eventTasks.mouseup, false);
+    bind(el, "click", this.eventTasks.click, false);
+    bind(el, "dblclick", this.eventTasks.dblclick, false);
+    bind(
+      el,
+      isFirefox ? "DOMMouseScroll" : "mousewheel",
+      this.eventTasks.mousewheel,
+      false
+    );
+    bind(window, "keydown", this.eventTasks.keydown, false); // canvas元素不支持keydown事件
+    bind(window, "resize", this.eventTasks.resize, false);
   }
   destroy() {
-    const {
-      el,
-      isFirefox
-    } = this
+    const { el, isFirefox } = this;
     // const rootEl = el.parentElement;
     // unbindClickoutside(rootEl)
-    unbind(el, 'mousedown', this.eventTasks.mousedown, false)
-    unbind(window, 'mousemove', this.eventTasks.mousemove, false)
-    unbind(window, 'mouseup', this.eventTasks.mouseup, false)
-    unbind(el, 'click', this.eventTasks.click, false)
-    unbind(el, 'dblclick', this.eventTasks.dblclick, false)
-    unbind(el, isFirefox ? 'DOMMouseScroll' : 'mousewheel', this.eventTasks.mousewheel, false)
-    unbind(window, 'keydown', this.eventTasks.keydown, false)
-    unbind(window, 'resize', this.eventTasks.resize, false)
+    unbind(el, "mousedown", this.eventTasks.mousedown, false);
+    unbind(window, "mousemove", this.eventTasks.mousemove, false);
+    unbind(window, "mouseup", this.eventTasks.mouseup, false);
+    unbind(el, "click", this.eventTasks.click, false);
+    unbind(el, "dblclick", this.eventTasks.dblclick, false);
+    unbind(
+      el,
+      isFirefox ? "DOMMouseScroll" : "mousewheel",
+      this.eventTasks.mousewheel,
+      false
+    );
+    unbind(window, "keydown", this.eventTasks.keydown, false);
+    unbind(window, "resize", this.eventTasks.resize, false);
   }
 }
 export default Events;

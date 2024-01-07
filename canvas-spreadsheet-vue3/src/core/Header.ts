@@ -24,9 +24,8 @@ function getColWidthByIndex(index) {
 
 import Context from "./Context.js";
 import ColumnHeader from "./ColumnHeader.js";
-import {
-  toLeaf,
-} from './util'
+import DataGrid from './DataGrid';
+import { toLeaf } from './util'
 import {
   ROW_INDEX_WIDTH,
   MIN_CELL_WIDTH,
@@ -42,7 +41,16 @@ oncheck.src = getAssetUrl("./images/oncheck.png");
 offcheck.src = getAssetUrl("./images/offcheck.png");
 indeterminate.src = getAssetUrl("./images/indeterminate.png");
 class Header extends Context {
-  constructor(grid, x, y) {
+  fixedColumnHeaders: any
+  allColumnHeaders: any
+  checked: boolean
+  indeterminate: boolean
+  columnHeaders: never[] | undefined
+  resizeTarget: any
+  resizeOriginalX: any
+  resizeOriginalWidth: any
+  isResizing: boolean | undefined
+  constructor(grid: any, x: number, y: number) {
     super(grid, x, y);
     this.checked = false;
     this.indeterminate = false

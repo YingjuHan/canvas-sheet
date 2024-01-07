@@ -1,15 +1,26 @@
 import RowHeader from "./RowHeader.js";
 import Cell from "./Cell.js";
 import Context from "./Context.js";
-import { 
-  ROW_INDEX_WIDTH,
-  SIZE_MAP
-} from "./constants";
+import { ROW_INDEX_WIDTH, SIZE_MAP } from "./constants";
+import DataGrid from "./DataGrid";
 
 class Row extends Context {
-  constructor(grid, rowIndex, x, y, height, data) {
-    super(grid, x, y, null, height);
-
+  data: any;
+  rowIndex: any;
+  checked: boolean;
+  allCells: Cell[];
+  fixedCells: Cell[];
+  cells: Cell[];
+  rowHeader: RowHeader;
+  constructor(
+    grid: any,
+    rowIndex: number,
+    x: number,
+    y: number,
+    height: number,
+    data: any
+  ) {
+    super(grid, x, y, 0, height);
     this.data = data;
     this.rowIndex = rowIndex;
     this.checked = false;
@@ -22,7 +33,7 @@ class Row extends Context {
       color: this.grid.color,
       fillColor: this.grid.fillColor,
       borderColor: this.grid.borderColor,
-      borderWidth: this.grid.borderWidth
+      borderWidth: this.grid.borderWidth,
     };
     this.rowHeader = new RowHeader(
       grid,
@@ -41,13 +52,14 @@ class Row extends Context {
       const column = this.grid.columns[i];
       const width = SIZE_MAP[column.size || "mini"];
       let fixed = "";
-      
+
       if (i < this.grid.fixedLeft) {
         fixed = "left";
       } else if (i > this.grid.columnsLength - 1 - this.grid.fixedRight) {
         fixed = "right";
       }
-      column.fixed = fixed
+      column.fixed = fixed;
+      
 
       const cell = new Cell(
         data[column.key],
@@ -63,6 +75,7 @@ class Row extends Context {
         data,
         style
       );
+      
 
       this.allCells.push(cell);
       if (fixed) {
@@ -75,36 +88,37 @@ class Row extends Context {
     }
   }
   // 鼠标枞坐标是否位于焦点单元格所在的autofill触点范围内
-  isInVerticalAutofill(mouseX, mouseY) {
+  isInVerticalAutofill(mouseX: number, mouseY: number) {
     return (
       this.grid.autofill.yIndex === this.rowIndex &&
       mouseY > this.y + this.grid.scrollY + this.height - 4 &&
       mouseY < this.y + this.height + this.grid.scrollY + 4
     );
   }
-  handleCheck(checked) {
-    this.checked = typeof checked === 'boolean' ? checked : !this.checked;
+  handleCheck(checked?: boolean) {
+    this.checked = typeof checked === "boolean" ? checked : !this.checked;
     this.rowHeader.handleCheck(this.checked);
   }
   // 选中单个单元格
-  mouseDown(x, y) {
+  mouseDown(x: number, y: number) {
     // 如果位于autofill触点上则不执行发选择单元格
     const cell = this.allCells[this.grid.autofill.xIndex];
-    if (cell && (
-      cell.isInHorizontalAutofill(x, y) ||
-      cell.isInsideFixedHorizontalAutofill(x, y)
-    )) {
-      return
+    if (
+      cell &&
+      (cell.isInHorizontalAutofill(x, y) ||
+        cell.isInsideFixedHorizontalAutofill(x, y))
+    ) {
+      return;
     }
 
     for (let i = 0; i < this.allCells.length; i++) {
       const cell = this.allCells[i];
-      if (cell.dataType === 'select' && cell.isInsideAffixIcon(x, y)) {
+      if (cell.dataType === "select" && cell.isInsideAffixIcon(x, y)) {
         this.grid.selectCell(cell);
         // 选择和编辑同时触发会导致切换下拉单元格的时候下拉浮层延迟消失
         setTimeout(() => {
           this.grid.startEdit();
-        }, 0)
+        }, 0);
       } else if (
         cell.isInsideHorizontalBodyBoundary(x, y) ||
         cell.isInsideFixedHorizontalBodyBoundary(x, y)
@@ -114,14 +128,24 @@ class Row extends Context {
     }
   }
   // 批量选中单元格时移动批量选取
-  mouseMove(mouseX, mouseY) {
+  mouseMove(mouseX: number, mouseY: number) {
     for (let i = 0; i < this.allCells.length; i++) {
       const cell = this.allCells[i];
       if (
         cell.isInsideHorizontalTableBoundary(mouseX, mouseY) ||
         cell.isInsideFixedHorizontalBodyBoundary(mouseX, mouseY)
       ) {
-        const { colIndex, rowIndex, x, y, width, height, valid, message, fixed } = cell;
+        const {
+          colIndex,
+          rowIndex,
+          x,
+          y,
+          width,
+          height,
+          valid,
+          message,
+          fixed,
+        } = cell;
         this.grid.multiSelectCell(colIndex, rowIndex, mouseX, mouseY);
 
         // 显示单元格tooltip校验失败提示文案
@@ -132,17 +156,20 @@ class Row extends Context {
           y,
           colWidth: width,
           colHeight: height,
-          fixed
+          fixed,
         });
 
-        if (cell.dataType === 'select' && cell.isInsideAffixIcon(mouseX, mouseY)) {
+        if (
+          cell.dataType === "select" &&
+          cell.isInsideAffixIcon(mouseX, mouseY)
+        ) {
           this.grid.target.style.cursor = "pointer";
         }
       }
     }
   }
   // 寻找autofill触点
-  handleAutofill(x, y) {
+  handleAutofill(x: number, y: number) {
     const cell = this.allCells[this.grid.autofill.xIndex];
     if (!cell) return;
     if (
@@ -153,7 +180,7 @@ class Row extends Context {
     }
   }
   // 单击autofill触点开始拖拽
-  handleStartAutofill(x, y) {
+  handleStartAutofill(x: number, y: number) {
     const cell = this.allCells[this.grid.autofill.xIndex];
     if (!cell) return;
     if (
@@ -163,16 +190,16 @@ class Row extends Context {
       this.grid.startAutofill();
     }
   }
-  click(x, y) {
+  click(x: number, y: number) {
     if (this.rowHeader.isInsideCheckboxBoundary(x, y)) {
       this.handleCheck();
       // body部分勾选状态发生变化，需要影响到表头的indeterminate状态
-      this.grid.handleCheckHeader()
+      this.grid.handleCheckHeader();
     } else if (this.rowHeader.isInsideIndexBoundary(x, y)) {
-      this.grid.selectRows(this)
+      this.grid.selectRows(this);
     }
   }
-  dbClick(x, y) {
+  dbClick(x: number, y: number) {
     for (let i = 0; i < this.allCells.length; i++) {
       const cell = this.allCells[i];
       // 仅当鼠标坐标位于body内的单元格之内时才会触发编辑模式
@@ -180,11 +207,13 @@ class Row extends Context {
         cell.isInsideHorizontalBodyBoundary(x, y) ||
         cell.isInsideFixedHorizontalBodyBoundary(x, y)
       ) {
+        console.log(this.grid);
+        
         this.grid.startEdit();
       }
     }
   }
-  resizeColumn(colIndex, diffWidth) {
+  resizeColumn(colIndex: number, diffWidth: number) {
     const scrollDiffWidth =
       this.grid.width -
       this.grid.tableWidth -
@@ -200,7 +229,7 @@ class Row extends Context {
         this.allCells[i].x += diffWidth;
       }
     }
-    
+
     // 滚动到最右侧，调小列宽时只更新目标列宽和相邻下一列的x轴坐标
     if (scrollDiffWidth === 0 && diffWidth <= 0) {
       cell.width += diffWidth;
@@ -232,6 +261,7 @@ class Row extends Context {
       }
     }
     // 固定列阴影
+    
     if (this.grid.scrollX !== 0) {
       this.grid.painter.drawRect(
         this.x + this.grid.originFixedWidth,
@@ -243,7 +273,7 @@ class Row extends Context {
           shadowBlur: 4,
           shadowColor: "rgba(143, 140, 140, 0.22)",
           shadowOffsetX: 2,
-          shadowOffsetY: 2
+          shadowOffsetY: 2,
         }
       );
     }
@@ -264,7 +294,7 @@ class Row extends Context {
           shadowBlur: 4,
           shadowColor: "rgba(143, 140, 140, 0.22)",
           shadowOffsetX: -2,
-          shadowOffsetY: 2
+          shadowOffsetY: 2,
         }
       );
     }

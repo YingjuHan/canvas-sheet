@@ -1,41 +1,76 @@
 import Context from "./Context.js";
-import Validator from "./Validator.js";
+import Validator from "./Validator";
 import {
   SELECT_BORDER_COLOR,
   SELECT_AREA_COLOR,
   READONLY_COLOR,
   READONLY_TEXT_COLOR,
-  ERROR_TIP_COLOR
+  ERROR_TIP_COLOR,
 } from "./constants";
 import { getAssetUrl } from "./util";
+import DataGrid from './DataGrid';
+import Row from "./Row";
+
 const dateIcon = new Image();
 const timeIcon = new Image();
-
 dateIcon.src = getAssetUrl("./images/date.png");
 timeIcon.src = getAssetUrl("./images/time.png");
+
 class Cell extends Context {
+  colIndex: number;
+  rowIndex: number;
+  rowData: Row;
+  title: any;
+  key: any;
+  labelKey: any;
+  readonly: any;
+  textAlign: any;
+  textBaseline: any;
+  dataType: string;
+  options: any;
+  render: any;
+  value: any;
+  label: any;
+  originalValue: any;
+  validator: Validator;
+  valid: boolean;
+  message: null;
+  borderColor: any;
+  color: any;
   constructor(
-    value,
-    label,
-    grid,
-    colIndex,
-    rowIndex,
-    x,
-    y,
-    width,
-    height,
-    column,
-    rowData,
-    options
+    value: null | undefined,
+    label: null | undefined,
+    grid: any,
+    colIndex: number,
+    rowIndex: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    column: {
+      fixed: any;
+      title: any;
+      key: any;
+      label: any;
+      readonly: any;
+      align: string;
+      baseline: string;
+      type: string;
+      options: any;
+      render: any;
+      rule: { immediate: boolean };
+    },
+    rowData: any,
+    options: { color: any; fillColor: any; borderColor: any; borderWidth: any }
   ) {
     super(grid, x, y, width, height, column.fixed);
     this.colIndex = colIndex;
     this.rowIndex = rowIndex;
-    this.rowData = rowData
+    this.rowData = rowData;
 
     this.title = column.title;
     this.key = column.key;
-    this.labelKey = column.label
+    this.labelKey = column.label;
     this.fixed = column.fixed;
     this.readonly = column.readonly;
     this.textAlign = column.align || "left";
@@ -44,8 +79,8 @@ class Cell extends Context {
     this.options = column.options;
     this.render = column.render;
 
-    this.value = value === null || value === undefined ? "" : value;
-    this.label = label
+    this.value = !value ? "" : value;
+    this.label = label;
     this.originalValue = value;
 
     this.validator = new Validator(column);
@@ -58,7 +93,7 @@ class Cell extends Context {
     this.validate();
   }
   // 鼠标横坐标是否位于【焦点单元格】所在的autofill触点范围内
-  isInHorizontalAutofill(mouseX, mouseY) {
+  isInHorizontalAutofill(mouseX: number, mouseY: any) {
     return (
       mouseX > this.x + this.grid.scrollX + this.width - 4 &&
       mouseX < this.x + this.grid.scrollX + this.width + 4 &&
@@ -67,7 +102,7 @@ class Cell extends Context {
     );
   }
   // 鼠标横坐标是否位于处于【冻结列中焦点单元格】所在的autofill触点范围内
-  isInsideFixedHorizontalAutofill(mouseX, mouseY) {
+  isInsideFixedHorizontalAutofill(mouseX: number, mouseY: any) {
     const x =
       this.grid.width -
       (this.grid.tableWidth - this.x - this.width) -
@@ -82,8 +117,11 @@ class Cell extends Context {
         this.fixed === "left")
     );
   }
-  async validate(data) {
-    const { flag, message } = await this.validator.validate(this.value, data || this.rowData);
+  async validate(data?: undefined) {
+    const { flag, message } = await this.validator.validate(
+      this.value,
+      data || this.rowData
+    );
     this.valid = flag;
     this.message = message;
   }
@@ -91,40 +129,40 @@ class Cell extends Context {
     this.valid = flag;
     this.message = message;
   }
-  handleNumber(val) {
+  handleNumber(val: number | string) {
     if (val === 0 || (val && !isNaN(Number(val)))) {
-      return Number(val)
+      return Number(val);
     } else {
-      return val || null // number类型的空字符串处理为null
+      return val || null; // number类型的空字符串处理为null
     }
   }
   /**
    * @param {String|Number} val 需要设置的值
    * @param {Boolean} ignore 是否忽略readonly属性可以修改
    */
-  setData(data, ignore) {
+  setData(data: { value: string | number; label: string }| string, ignore?: boolean) {
     if (!ignore && this.readonly) return;
-    let v = data
-    if (typeof v === 'string') {
-      v = data.trim()
+    let v = data;
+    if (typeof v === "string") {
+      v = (<string>data).trim();
     }
-    if (this.dataType === 'number') {
-      v = this.handleNumber(v)
+    if (this.dataType === "number") {
+      v = this.handleNumber(v);
     }
-    if (Object.prototype.toString.call(data) === '[object Object]') {
-      this.value = data.value
-      this.setLabel(data.label)
+    if (Object.prototype.toString.call(data) === "[object Object]") {
+      this.value = data.value;
+      this.setLabel(data.label);
     } else {
       if (this.grid.clipboard.isPaste || this.grid.autofill.enable) {
-        this.value = this.getMapValue(v)
+        this.value = this.getMapValue(v);
       } else {
         this.value = v;
       }
       this.setLabel(v);
     }
-    
-    const rowData = this.grid.body.getRowData(this.rowIndex)
-    this.validate(rowData)
+
+    const rowData = this.grid.body.getRowData(this.rowIndex);
+    this.validate(rowData);
 
     // changed diff
     if (this.value !== this.originalValue) {
@@ -133,7 +171,7 @@ class Cell extends Context {
       delete this.grid.hashChange[`${this.colIndex}-${this.rowIndex}`];
     }
   }
-  setLabel(val) {
+  setLabel(val: any) {
     let label;
     if (typeof this.render === "function") {
       label = this.render(val);
@@ -143,7 +181,8 @@ class Cell extends Context {
     this.label = label === null || label === undefined ? "" : label;
   }
   // 对于下拉类型的数据，对外展示的是label，实际存的是value，所以在更新这类数据的时候需要做一个转换
-  getMapValue(label) { // label => value
+  getMapValue(label: any) {
+    // label => value
     let value = label;
     if (this.dataType === "select" && Array.isArray(this.options)) {
       for (let item of this.options) {
@@ -155,7 +194,8 @@ class Cell extends Context {
     }
     return value;
   }
-  getMapLabel(value) { // value => label
+  getMapLabel(value: any) {
+    // value => label
     let label = value;
     if (this.dataType === "select" && Array.isArray(this.options)) {
       for (let item of this.options) {
@@ -180,7 +220,7 @@ class Cell extends Context {
       scrollX,
       scrollY,
       range,
-      fillColor
+      fillColor,
     } = this.grid;
     const x =
       this.fixed === "right"
@@ -195,24 +235,29 @@ class Cell extends Context {
     const fillLineSty = {
       borderColor: SELECT_BORDER_COLOR,
       borderWidth: 1,
-      lineDash: [4, 4]
-    }
+      lineDash: [4, 4],
+    };
 
     /**
      * 绘制单元格边框
      */
-    painter.ctx.save()
+    painter.ctx.save();
     painter.drawRect(x, y, this.width, this.height, {
       fillColor: this.readonly ? READONLY_COLOR : fillColor,
       borderColor: this.borderColor,
-      borderWidth: 1
+      borderWidth: 1,
     });
-    painter.ctx.clip()
+    painter.ctx.clip();
 
     /**
      * 绘制单元格内容
      */
-    const iconEl = this.dataType === 'datetime' ? timeIcon : (['month', 'date'].includes(this.dataType) ? dateIcon : null)
+    const iconEl =
+      this.dataType === "datetime"
+        ? timeIcon
+        : ["month", "date"].includes(this.dataType)
+        ? dateIcon
+        : null;
     painter.drawCellText(this.label, x, y, this.width, this.height, 10, {
       color: this.readonly ? READONLY_TEXT_COLOR : this.color,
       align: this.textAlign,
@@ -221,13 +266,13 @@ class Cell extends Context {
       iconOffsetX: 12,
       iconOffsetY: 1,
       iconWidth: 12,
-      iconHeight: 12
+      iconHeight: 12,
     });
-    if (this.dataType === 'select') {
-      painter.drawCellAffixIcon('arrow', x, y, this.width, this.height-2, {
-        color: '#bbbec4',
-        fillColor: this.readonly ? READONLY_COLOR : fillColor
-      })
+    if (this.dataType === "select") {
+      painter.drawCellAffixIcon("arrow", x, y, this.width, this.height - 2, {
+        color: "#bbbec4",
+        fillColor: this.readonly ? READONLY_COLOR : fillColor,
+      });
     }
 
     /**
@@ -237,10 +282,10 @@ class Cell extends Context {
       const points = [
         [x + this.width - 8, y],
         [x + this.width, y],
-        [x + this.width, y + 8]
+        [x + this.width, y + 8],
       ];
       painter.drawLine(points, {
-        fillColor: ERROR_TIP_COLOR
+        fillColor: ERROR_TIP_COLOR,
       });
     }
 
@@ -261,44 +306,48 @@ class Cell extends Context {
         this.rowIndex <= maxY
       ) {
         painter.drawRect(x, y, this.width, this.height, {
-          fillColor: SELECT_AREA_COLOR
+          fillColor: SELECT_AREA_COLOR,
         });
       }
       // top／bottom border
-      if (this.colIndex >= minX &&
+      if (
+        this.colIndex >= minX &&
         this.colIndex <= maxX &&
-        this.rowIndex + 1 === minY) {
+        this.rowIndex + 1 === minY
+      ) {
+        const points = [
+          [x, y + this.height - 1],
+          [x + this.width, y + this.height - 1],
+        ];
+        painter.drawLine(points, {
+          borderColor: SELECT_BORDER_COLOR,
+          borderWidth: 1,
+        });
+      }
+      if (
+        this.colIndex >= minX &&
+        this.colIndex <= maxX &&
+        this.rowIndex === maxY
+      ) {
+        if (this.rowIndex === range.maxY) {
           const points = [
-            [x, y + this.height - 1],
-            [x + this.width, y + this.height - 1]
+            [x, y + this.height],
+            [x + this.width, y + this.height],
           ];
           painter.drawLine(points, {
             borderColor: SELECT_BORDER_COLOR,
-            borderWidth: 1
+            borderWidth: 2,
           });
-      }
-      if (this.colIndex >= minX &&
-        this.colIndex <= maxX &&
-        this.rowIndex === maxY) {
-          if (this.rowIndex === range.maxY) {
-            const points = [
-              [x, y + this.height],
-              [x + this.width, y + this.height]
-            ];
-            painter.drawLine(points, {
-              borderColor: SELECT_BORDER_COLOR,
-              borderWidth: 2
-            });
-          } else {
-            const points = [
-              [x, y + this.height - 1],
-              [x + this.width, y + this.height - 1]
-            ];
-            painter.drawLine(points, {
-              borderColor: SELECT_BORDER_COLOR,
-              borderWidth: 1
-            });
-          }
+        } else {
+          const points = [
+            [x, y + this.height - 1],
+            [x + this.width, y + this.height - 1],
+          ];
+          painter.drawLine(points, {
+            borderColor: SELECT_BORDER_COLOR,
+            borderWidth: 1,
+          });
+        }
       }
       if (
         (this.colIndex >= minX &&
@@ -310,11 +359,11 @@ class Cell extends Context {
       ) {
         const points = [
           [x, y],
-          [x + this.width, y]
+          [x + this.width, y],
         ];
         painter.drawLine(points, {
           borderColor: SELECT_BORDER_COLOR,
-          borderWidth: 1
+          borderWidth: 1,
         });
       }
       // left／right border
@@ -328,11 +377,11 @@ class Cell extends Context {
       ) {
         const points = [
           [x, y],
-          [x, y + this.height]
+          [x, y + this.height],
         ];
         painter.drawLine(points, {
           borderColor: SELECT_BORDER_COLOR,
-          borderWidth: 2
+          borderWidth: 2,
         });
       }
       if (
@@ -345,11 +394,11 @@ class Cell extends Context {
       ) {
         const points = [
           [x + this.width, y],
-          [x + this.width, y + this.height]
+          [x + this.width, y + this.height],
         ];
         painter.drawLine(points, {
           borderColor: SELECT_BORDER_COLOR,
-          borderWidth: 2
+          borderWidth: 2,
         });
       }
       // autofill
@@ -359,8 +408,8 @@ class Cell extends Context {
         const autofillSty = {
           borderColor: "#fff",
           borderWidth: 2,
-          fillColor: SELECT_BORDER_COLOR
-        }
+          fillColor: SELECT_BORDER_COLOR,
+        };
         // left-top
         if (
           this.colIndex === autofill.xIndex &&
@@ -408,10 +457,10 @@ class Cell extends Context {
           this.colIndex !== this.grid.fixedLeft
         ) {
           painter.drawRect(
-            x - 3, 
-            y - 3, 
-            autofill_width, 
-            autofill_width, 
+            x - 3,
+            y - 3,
+            autofill_width,
+            autofill_width,
             autofillSty
           );
         }
@@ -431,7 +480,7 @@ class Cell extends Context {
         ) {
           const points = [
             [x, y + 1],
-            [x + this.width, y + 1]
+            [x + this.width, y + 1],
           ];
           painter.drawLine(points, fillLineSty);
         }
@@ -442,7 +491,7 @@ class Cell extends Context {
         ) {
           const points = [
             [x, y + this.height - 1],
-            [x + this.width, y + this.height - 1]
+            [x + this.width, y + this.height - 1],
           ];
           painter.drawLine(points, fillLineSty);
         }
@@ -454,7 +503,7 @@ class Cell extends Context {
         ) {
           const points = [
             [x + 1, y],
-            [x + 1, y + this.height]
+            [x + 1, y + this.height],
           ];
           painter.drawLine(points, fillLineSty);
         }
@@ -465,7 +514,7 @@ class Cell extends Context {
         ) {
           const points = [
             [x + this.width - 1, y],
-            [x + this.width - 1, y + this.height]
+            [x + this.width - 1, y + this.height],
           ];
           painter.drawLine(points, fillLineSty);
         }
@@ -485,7 +534,7 @@ class Cell extends Context {
       ) {
         const points = [
           [x, y + 1],
-          [x + this.width, y + 1]
+          [x + this.width, y + 1],
         ];
         painter.drawLine(points, fillLineSty);
       }
@@ -496,7 +545,7 @@ class Cell extends Context {
       ) {
         const points = [
           [x, y + this.height - 2],
-          [x + this.width, y + this.height - 2]
+          [x + this.width, y + this.height - 2],
         ];
         painter.drawLine(points, fillLineSty);
       }
@@ -508,7 +557,7 @@ class Cell extends Context {
       ) {
         const points = [
           [x + 1, y],
-          [x + 1, y + this.height]
+          [x + 1, y + this.height],
         ];
         painter.drawLine(points, fillLineSty);
       }
@@ -519,12 +568,21 @@ class Cell extends Context {
       ) {
         const points = [
           [x + this.width - 1, y],
-          [x + this.width - 1, y + this.height]
+          [x + this.width - 1, y + this.height],
         ];
         painter.drawLine(points, fillLineSty);
       }
     }
   }
+  // height(
+  //   x: any,
+  //   y: any,
+  //   width: any,
+  //   height: any,
+  //   arg4: { fillColor: any; borderColor: any; borderWidth: number }
+  // ) {
+  //   throw new Error("Method not implemented.");
+  // }
 }
 
 export default Cell;
